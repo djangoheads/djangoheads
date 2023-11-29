@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "djangoheads"
+version = "0.1.0"
+description = "Djangoheads is a comprehensive project that includes the most efficient and user-friendly tools for Django development."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
