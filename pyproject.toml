@@ -6,9 +6,83 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.8"
 
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.5.0"
+tox = "^4.11.4"
+django = "^4.2.7"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 2
+use_parentheses = true
+ensure_newline_before_comments = true
+wrap_length = 120
+line_length = 120
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+strict = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "django_settings"
+
+[tool.ruff]
+# Список подключенных плагинов, правил
+select = ["ALL"]
+# Список для исключения из проверки правил и плагинов
+ignore = [
+    "COM812", # Запятые в конце для элементов () в исключения
+    "D104", # Проверяет наличие docstring в файле __init__
+    "FA100", # Missing `from __future__ import annotations`, but uses `typing.Optional
+    "ANN101", # Проверка наличия аннотации для self
+    "ANN102", # Провекра наличия аннотации для cls
+    "ERA001", # Найден закомментированный код
+    "RUF001", # Проверка на наличие кириллицы С, A и тд в латинице.
+    "RUF002", # Проверка на наличие кириллицы о, о и тд в латинице.
+    "RUF003", # Проверка на наличие кириллицы c, a и тд в латинице.
+    "D212", # Правила оформления multiline docstring
+    "D400", # Проверка на наличие точки в конце docstring
+    "D415", # Проверка на наличие точки в конце docstring
+    "D203", # Требуется одна пустая строка перед докстринг класса
+    "D102", # Требуется docstring для методов класса
+    "D210", # Требуется отсутствие пробелов между """ """ для docstring в одной строке
+    "DTZ003", # The use of `datetime.datetime.utcnow()` is not allowed, use `datetime.datetime.now(tz=)` instead
+    "D100", # Проверят есть ли docstring на уровне модуля(файла)
+    "D107", # Проверка на наличие docstring в __init___ классов
+    "FBT", # Не использовать Boolean в качестве входных аргументов функции.
+    "TRY400", # Use logging.exception instead of logging.error
+    "TRY003", # Avoid specifying long messages outside the exception class
+]
+# Максимальная длина линии
+line-length = 120
+# Список файлов и директорий, исключенных из проверки
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv/*",
+    "*.pyc",
+    ".mypy_cache",
+    ".pytest_cache",
+    "setup.py",
+]
+# Позволяет работать исключениям, даже при их явном указании. Нобходимо для pre-commit
+force-exclude = true
+# Исключить из проверки, подходящее под регулярное выражение
+dummy-variable-rgx = "(?x)(^venv/ | ^venv\\.py$)"
+show-fixes = true
+show-source = true
+# Версия Python
+target-version = "py38"

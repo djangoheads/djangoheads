@@ -1,0 +1,90 @@
+default_language_version:
+    python: python3.8
+repos:
+    -   repo: https://github.com/pre-commit/pre-commit-hooks
+        rev: v4.4.0
+        hooks:
+            -   id: check-added-large-files
+            -   id: check-toml
+            -   id: check-yaml
+                args:
+                    - --unsafe
+            -   id: trailing-whitespace
+                exclude: |
+                    (?x)(
+                       ^tests/.*/fixtures/.*
+                    )
+            -   id: end-of-file-fixer
+                exclude: ^tests/.*/fixtures/.*
+            -   id: debug-statements
+    -   repo: https://github.com/best-doctor/pre-commit-hooks
+        rev: v1.0.11
+        hooks:
+            -   id: no-asserts
+                name: Check no asserts in code
+                language: python
+                exclude: /tests/
+    -   repo: https://github.com/PyCQA/isort
+        rev: 5.12.0
+        hooks:
+            -   id: isort
+                args:
+                    - djangoheads
+                    - tests
+                    - --profile black
+    -   repo: https://github.com/psf/black
+        rev: 23.11.0
+        hooks:
+            -   id: black
+                args:
+                    - djangoheads
+                    - tests
+                    - --target-version=py38
+    -   repo: https://github.com/PyCQA/autoflake
+        rev: v2.2.1
+        hooks:
+            -   id: autoflake
+                args:
+                    - --in-place
+                    - --recursive
+                    - --remove-all-unused-imports
+                    - --remove-unused-variables
+                    - --remove-duplicate-keys
+                    - --ignore-init-module-imports
+                    - djangoheads
+                    - tests
+    -   repo: https://github.com/PyCQA/flake8
+        rev: 6.1.0
+        hooks:
+            -   id: flake8
+    -   repo: https://github.com/PyCQA/docformatter
+        rev: v1.7.5
+        hooks:
+            -   id: docformatter
+                args:
+                    - --in-place
+                files: ^djangoheads/.*\.py$
+    -   repo: https://github.com/pre-commit/mirrors-mypy
+        rev: v1.7.1
+        hooks:
+            -   id: mypy
+                args:
+                    - --strict
+                    - --python-version=3.8
+                    - --ignore-missing-imports
+                files: ^djangoheads/.*\.py$
+                additional_dependencies:
+                    - django-stubs[compatible-mypy]
+    -   repo: https://github.com/astral-sh/ruff-pre-commit
+        rev: v0.1.6
+        hooks:
+            -   id: ruff
+                args:
+                    - --fix
+            -   id: ruff-format
+    -   repo: https://github.com/Yelp/detect-secrets
+        rev: v1.4.0
+        hooks:
+            -   id: detect-secrets
+                args:
+                    - scan > .secrets.baseline
