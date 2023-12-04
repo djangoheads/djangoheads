@@ -1,23 +1,22 @@
 from unittest import TestCase
 
-from djangoheads.apps import (
-    AppConfig,
-    DjangoheadsConfig,
-)
+import django
+from django.apps import apps
+from django.conf import settings
+
+from djangoheads.apps import DjangoheadsConfig
+
+if not settings.configured:
+    settings.configure(INSTALLED_APPS=["djangoheads"])
 
 
 class TestDjangoheadsConfig(TestCase):
-    """Test the DjangoheadsConfig class."""
+    """Test our app can be loaded correctly by Django."""
 
-    def test_subclass(self) -> None:
-        self.assertTrue(issubclass(DjangoheadsConfig, AppConfig))
+    def setUp(self) -> None:
+        django.setup()
 
-    def test_name(self) -> None:
-        self.assertTrue(hasattr(DjangoheadsConfig, "name"))
-        self.assertIsInstance(DjangoheadsConfig.name, str)
-        self.assertEqual(DjangoheadsConfig.name, "djangoheads")
-
-    def test_verbose_name(self) -> None:
-        self.assertTrue(hasattr(DjangoheadsConfig, "verbose_name"))
-        self.assertIsInstance(DjangoheadsConfig.verbose_name, str)
-        self.assertEqual(DjangoheadsConfig.verbose_name, "Django Heads")
+    def test_app_loading(self) -> None:
+        self.assertIn("djangoheads", settings.INSTALLED_APPS)
+        app_config = apps.get_app_config("djangoheads")
+        self.assertIsInstance(app_config, DjangoheadsConfig)
