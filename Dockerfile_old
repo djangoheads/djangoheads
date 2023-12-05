@@ -1,0 +1,61 @@
+FROM python:3.8-slim as base
+
+# Install core libs
+RUN apt-get update  \
+    && \
+    apt-get upgrade -y  \
+    && \
+    apt-get install -y \
+        apt-utils \
+        netcat-traditional \
+        binutils \
+        libproj-dev \
+        libpq-dev \
+        gdal-bin  \
+    && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install pyenv for managing multiple Python versions
+RUN apt-get update \
+    &&  \
+    apt-get install -y make build-essential libssl-dev zlib1g-dev \
+       libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+       libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
+    && curl https://pyenv.run | bash
+
+# Add pyenv to PATH
+ENV PATH="/root/.pyenv/bin:$PATH"
+
+# Install multiple Python versions using pyenv
+RUN pyenv install 3.9  \
+    && \
+    pyenv install 3.10  \
+    && \
+    pyenv install 3.11  \
+    && \
+    pyenv install 3.12  \
+    && \
+    pyenv global  \
+      3.9  \
+      3.10 \
+      3.11 \
+      3.12
+
+# Install poetry
+RUN pip3.8 install -U pip poetry
+
+# User preparation
+RUN useradd --create-home app
+WORKDIR /home/app
+RUN mkdir -p /home/app/libs
+WORKDIR /home/app/libs
+ENV PYTHONPATH="/home/app/libs"
+
+# Copy source code and setup environment
+COPY . /home/app/libs
+RUN chown -R app:app /home/app/libs
+USER app
+RUN poetry install
+RUN pre-commit install
+RUN pre-commit run -a
+RUN tox
