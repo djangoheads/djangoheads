@@ -1,0 +1,16 @@
+name: run-tests
+
+on:
+    push:
+        branches-ignore:
+            - main
+
+jobs:
+    test:
+        name: "Run tests via docker-compose"
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v2
+
+            -   name: Run Docker Compose
+                run: docker-compose up --exit-code-from web

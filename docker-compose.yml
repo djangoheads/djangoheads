@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+    web:
+        build: .
+        command: poetry run tox
+        volumes:
+            - /tmp/.djangoheads/.mypy_cache:/home/app/libs/.mypy_cache
+            - /tmp/.djangoheads/.ruff_cache:/home/app/libs/.ruff_cache
+            - /tmp/.djangoheads/.tox:/home/app/libs/.tox
