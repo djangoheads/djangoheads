@@ -17,7 +17,6 @@ COPY --from=python312 /usr/local /usr/local
 
 # Install core libs
 RUN apt-get update \
-    && apt-get upgrade -y \
     && apt-get install -y \
         --no-install-recommends \
         apt-utils \
@@ -32,12 +31,12 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Copy source code and setup environment
+# Setup environment
 WORKDIR /home/app/libs
-COPY . /home/app/libs
+COPY pyproject.toml poetry.lock* ./
+RUN pip3.8 install -U pip poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi
 
-# Init git, install poetry and dependencies
-RUN git init \
-    && git add . \
-    && pip3.8 install -U pip poetry \
-    && poetry install
+# Copy source code
+COPY . /home/app/libs
