@@ -2,22 +2,22 @@ name: ci-release
 
 on:
   push:
-    branches:
-      - stage
+    branches: [ main, stage ]
 
 jobs:
   job-release:
-    name: CI Release
-    if: github.repository_owner == 'ARQAWA'
+    name: CI Repository and PyPi Release
+    if: |
+      (github.ref == 'refs/heads/main' && github.repository_owner == 'djangoheads')
+      || (github.ref == 'refs/heads/stage' && github.repository_owner != 'djangoheads')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Release
+      - name: Push Semantic Release
         uses: cycjimmy/semantic-release-action@v4
         with:
           semantic_version: 22.0.9
@@ -27,3 +27,38 @@ jobs:
             conventional-changelog-conventionalcommits@7.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+        env:
+          POETRY_VIRTUALENVS_CREATE: false
+
+      - name: Set version to pyproject.toml, env and build package
+        run: |
+          echo "PYPI_URL=${{ secrets.PYPI_URL }}" >> $GITHUB_ENV
+          echo "PYPI_API_TOKEN=${{ secrets.PYPI_API_TOKEN }}" >> $GITHUB_ENV
+          TAG_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+          sed -i -E "/\[tool.poetry\]/,/\[/ s/version = \".*\"/version = \"${TAG_VERSION}\"/" pyproject.toml
+          pip install -U pip poetry
+          poetry build
+
+      - name: Publish to Test PyPI
+        if: |
+          (
+              (
+                  github.repository_owner != 'djangoheads'
+                  && github.ref == 'refs/heads/stage'
+                  && env.PYPI_URL == 'https://test.pypi.org/legacy/'
+              ) || (
+                  github.repository_owner == 'djangoheads'
+                  && github.ref == 'refs/heads/main'
+                  && env.PYPI_URL == 'https://upload.pypi.org/legacy/'
+              )
+          )
+          && env.PYPI_API_TOKEN != ''
+        run: |
+          poetry config repositories.publish_repo "${{ secrets.PYPI_URL }}"
+          poetry config pypi-token.publish_repo "${{ secrets.PYPI_API_TOKEN }}"
+          poetry publish --repository publish_repo
