@@ -1,0 +1,95 @@
+[tool.poetry]
+name = "djangoheads"
+version = "0.0.0"
+description = "Djangoheads is a comprehensive project that includes the most efficient and user-friendly tools for Django development."
+authors = ["Chukavin Arkadiy <chuark@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/djangoheads/djangoheads"
+repository = "https://github.com/djangoheads/djangoheads"
+documentation = "https://github.com/djangoheads/djangoheads"
+keywords = ["django", "development", "framework"]
+classifiers = [
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development",
+    "Typing :: Typed",
+    "Development Status :: 1 - Planning",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.5.0"
+django = "^4.2.7"
+nox = "^2023.4.22"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+strict = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "tests.__django_settings__"
+
+[tool.ruff]
+select = ["ALL"]
+ignore = [
+    "COM812",
+    "D104",
+    "FA100",
+    "ANN101",
+    "ANN102",
+    "ERA001",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "D212",
+    "D400",
+    "D415",
+    "D203",
+    "D102",
+    "D210",
+    "DTZ003",
+    "D100",
+    "D107",
+    "FBT",
+    "TRY400",
+    "TRY003",
+    "PT009",
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv/*",
+    "*.pyc",
+    ".mypy_cache",
+    ".pytest_cache",
+    "setup.py",
+]
+line-length = 120
+force-exclude = true
+dummy-variable-rgx = "(?x)(^venv/ | ^venv\\.py$)"
+show-fixes = true
+show-source = true
+target-version = "py38"
