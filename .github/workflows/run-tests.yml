@@ -1,0 +1,57 @@
+name: run-tests
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - stage
+
+jobs:
+  job-execute-tests:
+    name: "Execute tests via docker-compose"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.docker
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Cache DjangoHeads directories
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.djangoheads
+          key: ${{ runner.os }}-djangoheads-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-djangoheads-
+
+      - name: Build and cache Docker images
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          load: true
+          cache-from: type=local,src=/tmp/.docker
+          cache-to: type=local,dest=/tmp/.docker
+
+      - name: Run Docker Compose
+        run: docker-compose up --exit-code-from web
