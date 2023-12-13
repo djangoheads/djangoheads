@@ -8,5 +8,6 @@ INSTALLED_APPS = [
     "django.contrib.redirects",
     "django.contrib.sessions",
     "django.contrib.sites",
+    "django.contrib.staticfiles",
     "djangoheads",
 ]
