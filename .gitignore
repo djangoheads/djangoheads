@@ -215,3 +215,6 @@ Icon
 
 # Thumbnails
 ._*
+
+# files for testing code snippets
+x.py

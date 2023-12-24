@@ -2,14 +2,31 @@ default_language_version:
   python: python3.8
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6
+    rev: v0.1.9
     hooks:
-      - id: ruff
-        args:
-          - --fix
       - id: ruff-format
+        args:
+          - --preview
+          - --verbose
+        files: ^(tests/|djangoheads/).*\.py$
+      - id: ruff
+        name: ruff-djangoheads
+        args:
+          - --preview
+          - --fix
+          - --unsafe-fixes
+        files: ^djangoheads/.*\.py$
+      - id: ruff
+        name: ruff-tests
+        args:
+          - --preview
+          - --fix
+          - --unsafe-fixes
+          - --extend-ignore
+          - ANN
+        files: ^tests/.*\.py$
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.8.0
     hooks:
       - id: mypy
         args:
@@ -20,7 +37,7 @@ repos:
         additional_dependencies:
           - django-stubs[compatible-mypy]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-added-large-files
       - id: check-toml
