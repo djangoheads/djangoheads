@@ -15,4 +15,3 @@ supervisord.log
 supervisord.pid
 chromedriver
 node_modules/
-x.py

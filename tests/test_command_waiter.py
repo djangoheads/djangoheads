@@ -1,8 +1,8 @@
-# from django.core.management import call_command
-# from django.test import TransactionTestCase
-#
-# class InitDjangoCommandTest(TransactionTestCase):
-#     """Tests for initdjango command."""
-#
-#     def test_waiter_django_command(self) -> None:  # noqa
-#         call_command("migrate")
+import pytest
+from django.core.management import call_command
+
+
+@pytest.mark.django_db()
+def test_init_django_command() -> None:
+    """Test the initdjango command."""
+    call_command("waiter", "-n", "1", "-t", "0")

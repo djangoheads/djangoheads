@@ -6,27 +6,29 @@ from django.core.cache import cache as django_cache
 
 from tests.__django_settings__ import INSTALLED_APPS
 
+
 # initialize django settings
-django_settings.configure(
-    INSTALLED_APPS=INSTALLED_APPS,
-    DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    },
-    CACHES={
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "unique-snowflake",
-        }
-    },
-    STATIC_ROOT="/tmp/static/",  # noqa: S108
-    STATIC_URL="/static/",
-    MEDIA_ROOT="/tmp/media/",  # noqa: S108
-    MEDIA_URL="/media/",
-    MIDDLEWARE_CLASSES=(),
-)
+def pytest_configure():
+    django_settings.configure(
+        INSTALLED_APPS=INSTALLED_APPS,
+        DATABASES={
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": ":memory:",
+            }
+        },
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "unique-snowflake",
+            }
+        },
+        STATIC_ROOT="/tmp/static/",  # noqa: S108
+        STATIC_URL="/static/",
+        MEDIA_ROOT="/tmp/media/",  # noqa: S108
+        MEDIA_URL="/media/",
+        MIDDLEWARE_CLASSES=(),
+    )
 
 
 @pytest.fixture
