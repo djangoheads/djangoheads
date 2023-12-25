@@ -23,32 +23,26 @@ def pytest_configure():
                 "LOCATION": "unique-snowflake",
             }
         },
-        STATIC_ROOT="/tmp/static/",  # noqa: S108
         STATIC_URL="/static/",
-        MEDIA_ROOT="/tmp/media/",  # noqa: S108
         MEDIA_URL="/media/",
         MIDDLEWARE_CLASSES=(),
     )
 
 
 @pytest.fixture
-def root_static_dir(tmpdir):
+def root_static_dir(tmpdir, settings):
     """Fixture for static root directory."""
-    return tmpdir.mkdir("static")
+    static_dir = tmpdir.mkdir("test_staticfiles")
+    settings.STATIC_ROOT = static_dir.strpath
+    return static_dir
 
 
 @pytest.fixture
-def root_media_dir(tmpdir):
+def root_media_dir(tmpdir, settings):
     """Fixture for media root directory."""
-    return tmpdir.mkdir("media")
-
-
-@pytest.fixture(autouse=True)
-def dj_settings(root_static_dir, root_media_dir):
-    """Fixture for django settings."""
-    django_settings.STATIC_ROOT = root_static_dir.strpath
-    django_settings.MEDIA_ROOT = root_media_dir.strpath
-    return django_settings
+    media_dir = tmpdir.mkdir("test_media")
+    settings.MEDIA_ROOT = media_dir.strpath
+    return media_dir
 
 
 @pytest.fixture(autouse=True)

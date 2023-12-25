@@ -6,10 +6,10 @@ from django.core.management import call_command
 
 
 @pytest.fixture
-def extra_static_dir(tmpdir, dj_settings):
+def extra_static_dir(tmpdir, settings):
     """Create a temporary directory for static files."""
     extra_dir = tmpdir.mkdir("staticfiles_extra")
-    dj_settings.STATICFILES_DIRS = [extra_dir.strpath]
+    settings.STATICFILES_DIRS = [extra_dir.strpath]
     return extra_dir
 
 

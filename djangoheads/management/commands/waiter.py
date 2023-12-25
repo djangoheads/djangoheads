@@ -51,6 +51,10 @@ class Command(BaseCommand):
 
     def handle(self, *args: Tuple[Any, ...], **options: Dict[str, Any]) -> None:  # noqa: ARG002
         """Command implementation."""
+        if not settings.DATABASES:
+            self.stdout.write("DATABASES ARE NOT CONFIGURED!")
+            exit(1)
+
         self._attempts = cast(int, options.get("n", self._attempts))
         self._timeout = cast(int, options.get("t", self._timeout))
 
@@ -106,14 +110,15 @@ class Command(BaseCommand):
 
     def check_migrations_are_applied(self) -> bool:
         """Check migrations."""
+        message = "MIGRATIONS ARE APPLIED"
         try:
             call_command("migrate", "--check", no_input=True)
-            self._print_check("MIGRATIONS ARE APPLIED")
+            self._print_check(message)
             return True
         except SystemExit:
-            self._print_check("MIGRATIONS ARE APPLIED", False)
+            self._print_check(message, False)
         except Exception as e:
-            self._print_check("MIGRATIONS ARE APPLIED", exception=e)
+            self._print_check(message, exception=e)
         return False
 
     def _print_check(
