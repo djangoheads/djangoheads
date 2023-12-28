@@ -1,5 +1,4 @@
 import random
-import string
 import sys
 import time
 from argparse import ArgumentParser
@@ -7,6 +6,8 @@ from collections import deque
 from typing import Any, Callable, Deque, Dict, Optional, Tuple, cast
 
 from django.conf import settings
+from django.core.cache import InvalidCacheBackendError, caches
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import connections
@@ -51,20 +52,18 @@ class Command(BaseCommand):
 
     def handle(self, *args: Tuple[Any, ...], **options: Dict[str, Any]) -> None:  # noqa: ARG002
         """Command implementation."""
-        if not settings.DATABASES:
-            self.stdout.write("DATABASES ARE NOT CONFIGURED!")
-            exit(1)
-
         self._attempts = cast(int, options.get("n", self._attempts))
         self._timeout = cast(int, options.get("t", self._timeout))
 
         self._check_funcs.append(self.check_db_read)
         self._check_funcs.append(self.check_db_write)
         self._check_funcs.append(self.check_migrations_are_applied)
+        self._check_funcs.append(self.check_caches)
 
         while self._check_funcs and self._attempts > 0:
             check_func = self._check_funcs.popleft()
-            if not check_func():
+            res = check_func()
+            if not res:
                 self._check_funcs.append(check_func)
                 self._attempts -= 1
                 if self._attempts > 0:
@@ -74,7 +73,7 @@ class Command(BaseCommand):
 
     def check_db_read(self) -> bool:
         """Check database read availability."""
-        message_read = "DB AVAILABILITY [{}]"
+        message_read = "DB IS AVAILABLE [{}]"
         message = ""
         try:
             for alias in settings.DATABASES:
@@ -83,6 +82,9 @@ class Command(BaseCommand):
                     cursor.execute("SELECT 1")
                     self._print_check(message)
             return True
+        except ImproperlyConfigured:
+            self.stdout.write("DATABASES ARE NOT CONFIGURED!")
+            exit(1)
         except Exception as exc:
             self._print_check(message, exception=exc)
         return False
@@ -92,8 +94,7 @@ class Command(BaseCommand):
         message_write = "DB CAN WRITE [{}]"
         message = ""
         try:
-            random_hash = "".join(random.choice(string.hexdigits + string.digits) for _ in range(8))
-            test_table_name = f"__TEST_{random_hash}__".upper()
+            test_table_name = f"__test_{self._get_random_hexstr()}__"
             for alias in settings.DATABASES:
                 with connections[alias].cursor() as cursor:  # type: CursorWrapper
                     message = message_write.format(alias)
@@ -119,6 +120,30 @@ class Command(BaseCommand):
             self._print_check(message, False)
         except Exception as e:
             self._print_check(message, exception=e)
+        return False
+
+    def check_caches(self) -> bool:
+        """Check caches."""
+        message_cache = "CACHE IS AVAILABLE [{}]"
+        message = ""
+        try:
+            for cache_name in settings.CACHES:
+                message = message_cache.format(cache_name)
+                cache = caches[cache_name]
+                test_key = f"__test_{self._get_random_hexstr()}__"
+                test_value = "1"
+                cache.set(test_key, test_value, timeout=60)
+                if cache.get(test_key) != test_value:
+                    self._print_check(message, False)
+                    break
+            else:
+                self._print_check(message, True)
+                return True
+        except InvalidCacheBackendError as exc:
+            if isinstance(exc, InvalidCacheBackendError):
+                self._print_check("CACHES ARE NOT CONFIGURED", None)
+                return True
+            self._print_check(message_cache.format(message), False, exception=exc)
         return False
 
     def _print_check(
@@ -152,3 +177,17 @@ class Command(BaseCommand):
 
         if isinstance(exception, Exception):
             self.stdout.write(f"\n{exception.__class__.__name__}: {exception}" + "\n" * 5)
+
+    @staticmethod
+    def _get_random_hexstr(length: int = 8) -> str:
+        """Generate a random hash.
+
+        Args:
+        ----
+            length: A length of the hash. Defaults to 8.
+
+        Returns:
+        -------
+            A random hash.
+        """
+        return "".join(random.choices("0123456789abcdef", k=length))
