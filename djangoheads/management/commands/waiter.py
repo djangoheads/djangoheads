@@ -64,7 +64,7 @@ class Command(BaseCommand):
             check_func = self._check_funcs.popleft()
             res = check_func()
             if not res:
-                self._check_funcs.append(check_func)
+                self._check_funcs.appendleft(check_func)
                 self._attempts -= 1
                 if self._attempts > 0:
                     time.sleep(self._timeout)
@@ -74,30 +74,34 @@ class Command(BaseCommand):
     def check_db_read(self) -> bool:
         """Check database read availability."""
         message_read = "DB IS AVAILABLE [{}]"
+        extra_info = None
         message = ""
         try:
             for alias in settings.DATABASES:
+                message = message_read.format(alias)
+                extra_info = self._get_database_extra_info(alias)
                 with connections[alias].cursor() as cursor:  # type: CursorWrapper
-                    message = message_read.format(alias)
                     cursor.execute("SELECT 1")
                     self._print_check(message)
             return True
         except ImproperlyConfigured:
             self.stdout.write("DATABASES ARE NOT CONFIGURED!")
-            exit(1)
+            sys.exit(1)
         except Exception as exc:
-            self._print_check(message, exception=exc)
+            self._print_check(message, exception=exc, exta_info=extra_info)
         return False
 
     def check_db_write(self) -> bool:
         """Check databases availability."""
         message_write = "DB CAN WRITE [{}]"
+        extra_info = None
         message = ""
         try:
             test_table_name = f"__test_{self._get_random_hexstr()}__"
             for alias in settings.DATABASES:
+                message = message_write.format(alias)
+                extra_info = self._get_database_extra_info(alias)
                 with connections[alias].cursor() as cursor:  # type: CursorWrapper
-                    message = message_write.format(alias)
                     cursor.execute(f"CREATE TABLE {test_table_name} (id serial PRIMARY KEY, num integer);")
                     cursor.execute(f"INSERT INTO {test_table_name} (num) VALUES (1);")
                     cursor.execute(f"UPDATE {test_table_name} SET num = 2 WHERE id = 1;")
@@ -106,7 +110,7 @@ class Command(BaseCommand):
                     self._print_check(message)
             return True
         except Exception as e:
-            self._print_check(message, exception=e)
+            self._print_check(message, exception=e, exta_info=extra_info)
         return False
 
     def check_migrations_are_applied(self) -> bool:
@@ -146,12 +150,40 @@ class Command(BaseCommand):
             self._print_check(message_cache.format(message), False, exception=exc)
         return False
 
+    # def check_celery(self) -> bool:
+    #     """Check celery availability."""
+    #     if not hasattr(settings, "CELERY_BROKER_URL"):
+    #         self._print_check("CELERY IS NOT CONFIGURED", None)
+    #         return True
+    #
+    #     message = "CELERY IS AVAILABLE"
+    #     try:
+    #         result = subprocess.run(
+    #             ("celery", "-A", settings.CELERY_APP_NAME, "inspect", "ping"),
+    #             stdout=subprocess.PIPE,
+    #             stderr=subprocess.PIPE,
+    #             check=True,
+    #         )
+    #         if result.returncode == 0:
+    #             self._print_check(message)
+    #             return True
+    #         else:
+    #             self._print_check(message, False)
+    #             return False
+    #     except subprocess.CalledProcessError as e:
+    #         self._print_check(message, False, exception=e)
+    #         return False
+    #     except Exception as e:
+    #         self._print_check(message, False, exception=e)
+    #         return False
+
     def _print_check(
         self,
         label: str,
         success: Optional[bool] = True,
         *,
-        width: int = 64,
+        width: int = 96,
+        exta_info: Optional[str] = None,
         exception: Optional[Exception] = None,
     ) -> None:
         """Log a message with a label and a status indicator.
@@ -161,6 +193,7 @@ class Command(BaseCommand):
             label: A message label.
             success: A status indicator. Defaults to True. If None, the status indicator is SKIPPED.
             width: A width of the message. Defaults to 80.
+            exta_info: Extra info string. Defaults to None.
             exception: An exception instance. Defaults to None.
 
         Returns:
@@ -175,8 +208,33 @@ class Command(BaseCommand):
         msg = f"{label}{'.' * spacers}{status_indicator}"
         self.stdout.write(msg)
 
+        if exta_info is not None:
+            self.stdout.write(exta_info + "\n")
+
         if isinstance(exception, Exception):
-            self.stdout.write(f"\n{exception.__class__.__name__}: {exception}" + "\n" * 5)
+            self.stdout.write(f"{exception.__class__.__name__}: {exception}" + "\n" * 3)
+
+    @staticmethod
+    def _get_database_extra_info(alias: str) -> Optional[str]:
+        """Get extra info about database by alias.
+
+        Args:
+        ----
+            alias: A database alias.
+
+        Returns:
+        -------
+            Extra info about database.
+        """
+        if alias not in settings.DATABASES:
+            return None
+
+        extra_info = f"{settings.DATABASES[alias]['ENGINE']}//"
+        extra_info += f"{settings.DATABASES[alias]['USER']}@"
+        extra_info += f"{settings.DATABASES[alias]['HOST']}:{settings.DATABASES[alias]['PORT']}"
+        extra_info += f"/{settings.DATABASES[alias]['NAME']}"
+
+        return extra_info
 
     @staticmethod
     def _get_random_hexstr(length: int = 8) -> str:
