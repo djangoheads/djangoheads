@@ -2,22 +2,23 @@ import contextlib
 from unittest.mock import patch
 
 import pytest
-from django.db import connection
+from django.core.exceptions import ImproperlyConfigured
+from django.db import connection, connections
 
 from djangoheads.management.commands.waiter import Command
 
 
-def test_databases_not_configured_exits(settings):
+@pytest.mark.django_db
+def test_databases_not_configured_exits():
     """Test for databases not configured exit."""
-    settings.DATABASES = {}
 
     command = Command()
-    with patch.object(command.stdout, "write") as mock_write:
-        with pytest.raises(SystemExit) as exit_exception:
-            command.handle()
 
-        mock_write.assert_called_with("DATABASES ARE NOT CONFIGURED!")
-        assert exit_exception.type is SystemExit
+    with pytest.raises(SystemExit) as exit_exception:
+        with patch.object(connections["default"], "cursor", side_effect=ImproperlyConfigured) as mock:
+            command.handle()
+            assert mock.call_count == 1
+
         assert exit_exception.value.code == 1
 
 
