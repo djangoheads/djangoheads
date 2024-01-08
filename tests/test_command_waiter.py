@@ -62,3 +62,25 @@ def test_command_arguments():
     parsed_args = parser.parse_args(["-n", "5", "-t", "15"])
     assert parsed_args.n == 5
     assert parsed_args.t == 15
+
+
+@pytest.mark.django_db
+def test_cache_configured_and_accessible():
+    """Test for cache configured and accessible."""
+    command = Command()
+    assert command.check_caches() is True
+
+
+@pytest.mark.django_db
+def test_redis_cache_not_available():
+    """Test for redis cache not available."""
+
+    from django.conf import settings as django_settings  # noqa: PLC0415
+
+    django_settings.CACHES["redis"] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:48765/1",
+    }
+
+    command = Command()
+    assert command.check_caches() is False

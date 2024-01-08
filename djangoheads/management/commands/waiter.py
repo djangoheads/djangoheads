@@ -1,10 +1,14 @@
+import importlib
+import os
 import random
+import subprocess
 import sys
 import time
 from argparse import ArgumentParser
 from collections import deque
 from typing import Any, Callable, Deque, Dict, Optional, Tuple, cast
 
+from celery.app.control import Inspect
 from django.conf import settings
 from django.core.cache import InvalidCacheBackendError, caches
 from django.core.exceptions import ImproperlyConfigured
@@ -59,6 +63,7 @@ class Command(BaseCommand):
         self._check_funcs.append(self.check_db_write)
         self._check_funcs.append(self.check_migrations_are_applied)
         self._check_funcs.append(self.check_caches)
+        self._check_funcs.append(self.check_celery)
 
         while self._check_funcs and self._attempts > 0:
             check_func = self._check_funcs.popleft()
@@ -109,8 +114,8 @@ class Command(BaseCommand):
                     cursor.execute(f"DROP TABLE {test_table_name};")
                     self._print_check(message)
             return True
-        except Exception as e:
-            self._print_check(message, exception=e, exta_info=extra_info)
+        except Exception as exc:
+            self._print_check(message, exception=exc, exta_info=extra_info)
         return False
 
     def check_migrations_are_applied(self) -> bool:
@@ -122,8 +127,8 @@ class Command(BaseCommand):
             return True
         except SystemExit:
             self._print_check(message, False)
-        except Exception as e:
-            self._print_check(message, exception=e)
+        except Exception as exc:
+            self._print_check(message, exception=exc)
         return False
 
     def check_caches(self) -> bool:
@@ -144,38 +149,41 @@ class Command(BaseCommand):
                 self._print_check(message, True)
                 return True
         except InvalidCacheBackendError as exc:
-            if isinstance(exc, InvalidCacheBackendError):
+            if isinstance(exc, ImproperlyConfigured):
                 self._print_check("CACHES ARE NOT CONFIGURED", None)
                 return True
             self._print_check(message_cache.format(message), False, exception=exc)
+        except Exception as exc:
+            self._print_check(message, exception=exc)
         return False
 
-    # def check_celery(self) -> bool:
-    #     """Check celery availability."""
-    #     if not hasattr(settings, "CELERY_BROKER_URL"):
-    #         self._print_check("CELERY IS NOT CONFIGURED", None)
-    #         return True
-    #
-    #     message = "CELERY IS AVAILABLE"
-    #     try:
-    #         result = subprocess.run(
-    #             ("celery", "-A", settings.CELERY_APP_NAME, "inspect", "ping"),
-    #             stdout=subprocess.PIPE,
-    #             stderr=subprocess.PIPE,
-    #             check=True,
-    #         )
-    #         if result.returncode == 0:
-    #             self._print_check(message)
-    #             return True
-    #         else:
-    #             self._print_check(message, False)
-    #             return False
-    #     except subprocess.CalledProcessError as e:
-    #         self._print_check(message, False, exception=e)
-    #         return False
-    #     except Exception as e:
-    #         self._print_check(message, False, exception=e)
-    #         return False
+    def check_celery(self) -> bool:
+        """Check celery availability."""
+        celery_url = getattr(settings, "CELERY_BROKER_URL", getattr(settings, "BROKER_URL", None))
+
+        if celery_url is None:
+            self._print_check("CELERY IS NOT CONFIGURED", None)
+            return True
+
+        app_import_path = self._get_celery_import_path()
+        if app_import_path is None:
+            self._print_check("CELERY APP PACKAGE IS NOT FOUND", False)
+            return False
+
+        message = "CELERY IS AVAILABLE"
+        try:
+            celery_app = importlib.import_module(app_import_path).app
+            result = Inspect(app=celery_app).ping()
+            if result.returncode == 0:
+                self._print_check(message)
+                return True
+            self._print_check(message, False)
+        except Exception as exc:
+            additional_info = None
+            if isinstance(exc, subprocess.CalledProcessError):
+                additional_info = exc.stderr.decode("utf-8")
+            self._print_check(message, exception=exc, exta_info=additional_info)
+        return False
 
     def _print_check(
         self,
@@ -249,3 +257,13 @@ class Command(BaseCommand):
             A random hash.
         """
         return "".join(random.choices("0123456789abcdef", k=length))
+
+    @staticmethod
+    def _get_celery_import_path() -> Optional[str]:
+        """Get celery import path for run check."""
+        directory = os.getcwd()
+        for root, dirs, files in os.walk(directory):
+            if "celery.py" in files:
+                return os.path.join(root, "celery").replace(os.getcwd() + "/", "").replace("/", ".")
+
+        return None

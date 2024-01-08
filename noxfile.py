@@ -13,6 +13,6 @@ def run_linters(session: nox.Session) -> None:
 def run_tests(session: nox.Session) -> None:
     """Run tests in different Django versions"""
     for version in range(2):
-        session.install("pytest-django")
         session.install(f"django>=4.{version + 1},<4.{version + 2}")
-        session.run("pytest", "./tests/", "--verbose")
+        session.install("pytest-django", "django-redis", "celery")
+        session.run("pytest", "./tests", "-vv")

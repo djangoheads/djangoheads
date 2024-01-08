@@ -4,7 +4,7 @@ import pytest
 from django.conf import settings as django_settings
 from django.core.cache import cache as django_cache
 
-from tests.__django_settings__ import INSTALLED_APPS
+from test_django_project.settings import INSTALLED_APPS
 
 
 # initialize django settings
@@ -23,6 +23,7 @@ def pytest_configure():
                 "LOCATION": "unique-snowflake",
             }
         },
+        CELERY_BROKER_URL="redis://127.0.0.1:48765/1",
         STATIC_URL="/static/",
         MEDIA_URL="/media/",
         MIDDLEWARE_CLASSES=(),

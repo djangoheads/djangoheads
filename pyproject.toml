@@ -9,6 +9,7 @@ homepage = "https://github.com/djangoheads/djangoheads"
 repository = "https://github.com/djangoheads/djangoheads"
 documentation = "https://github.com/djangoheads/djangoheads"
 keywords = ["django", "development", "framework"]
+include = [{ path = "djangoheads", format = "sdist" }]
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -39,6 +40,8 @@ pre-commit = "^3.5.0"
 django = "^4.2.3"
 nox = "^2023.4.22"
 pytest-django = "^4.7.0"
+django-redis = "^5.4.0"
+celery = "^5.3.6"
 
 [build-system]
 requires = ["poetry-core"]
@@ -83,4 +86,4 @@ strict = true
 plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
-django_settings_module = "tests.__django_settings__"
+django_settings_module = "test_django_project.settings"
