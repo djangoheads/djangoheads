@@ -1,22 +1,36 @@
 import os
 
+import pytest
+from django.contrib.auth.models import User
 from django.core.management import call_command
-from django.test import TransactionTestCase
-
-import tests.__setup_django__  # noqa: F401
 
 
-class InitDjangoCommandTest(TransactionTestCase):
-    """Tests for initdjango command."""
+@pytest.fixture
+def extra_static_dir(tmpdir, settings):
+    """Create a temporary directory for static files."""
+    extra_dir = tmpdir.mkdir("staticfiles_extra")
+    settings.STATICFILES_DIRS = [extra_dir.strpath]
+    return extra_dir
 
-    def test_init_django_command(self) -> None:
-        os.environ["RUNNING_TESTS"] = "true"
 
-        # import user model
-        from django.contrib.auth.models import User
+@pytest.fixture
+def test_file(extra_static_dir):
+    """Create a test file in the extra static directory."""
+    test_static_file = extra_static_dir.join("testfile.txt")
+    test_static_file.write("content")
+    return test_static_file
 
-        # Call initdjango command
-        call_command("initdjango")
 
-        is_admin_user_exists = User.objects.filter(username="admin").exists()
-        self.assertTrue(is_admin_user_exists)
+@pytest.mark.django_db
+def test_init_django_command(dj_cache, test_file, root_static_dir) -> None:
+    """Test the initdjango command."""
+    os.environ["RUNNING_TESTS"] = "true"
+
+    call_command("initdjango")
+
+    assert User.objects.filter(username="admin").exists()
+
+    dj_cache.set("test_key", "test_value")
+    assert dj_cache.get("test_key") == "test_value"
+
+    assert os.path.exists(os.path.join(root_static_dir, test_file.basename))

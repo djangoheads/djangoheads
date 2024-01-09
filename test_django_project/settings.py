@@ -11,3 +11,5 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "djangoheads",
 ]
+# The following url is required for Celery to run tests correctly.
+CELERY_BROKER_URL = "redis://127.0.0.1:48765/1"
