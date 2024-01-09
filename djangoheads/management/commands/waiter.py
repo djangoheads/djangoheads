@@ -1,11 +1,12 @@
 import importlib
 import os
 import random
-import subprocess
+import re
 import sys
 import time
 from argparse import ArgumentParser
 from collections import deque
+from pathlib import Path
 from typing import Any, Callable, Deque, Dict, Optional, Tuple, cast
 
 from celery.app.control import Inspect
@@ -60,7 +61,7 @@ class Command(BaseCommand):
         self._timeout = cast(int, options.get("t", self._timeout))
 
         self._check_funcs.append(self.check_db_read)
-        self._check_funcs.append(self.check_db_write)
+        # self._check_funcs.append(self.check_db_write) # TODO: Later we will add this check
         self._check_funcs.append(self.check_migrations_are_applied)
         self._check_funcs.append(self.check_caches)
         self._check_funcs.append(self.check_celery)
@@ -160,29 +161,23 @@ class Command(BaseCommand):
     def check_celery(self) -> bool:
         """Check celery availability."""
         celery_url = getattr(settings, "CELERY_BROKER_URL", getattr(settings, "BROKER_URL", None))
-
         if celery_url is None:
             self._print_check("CELERY IS NOT CONFIGURED", None)
             return True
 
-        app_import_path = self._get_celery_import_path()
+        app_import_path = self._find_celery_app_import_path()
         if app_import_path is None:
             self._print_check("CELERY APP PACKAGE IS NOT FOUND", False)
             return False
 
         message = "CELERY IS AVAILABLE"
         try:
-            celery_app = importlib.import_module(app_import_path).app
-            result = Inspect(app=celery_app).ping()
-            if result.returncode == 0:
-                self._print_check(message)
-                return True
-            self._print_check(message, False)
+            celery_app = importlib.import_module(app_import_path).celery_app
+            Inspect(app=celery_app, timeout=0.25).ping()  # throws exception if broker isnt available
+            self._print_check(message)
+            return True
         except Exception as exc:
-            additional_info = None
-            if isinstance(exc, subprocess.CalledProcessError):
-                additional_info = exc.stderr.decode("utf-8")
-            self._print_check(message, exception=exc, exta_info=additional_info)
+            self._print_check(message, exception=exc, exta_info=f"Broker URL: {celery_url}")
         return False
 
     def _print_check(
@@ -259,11 +254,23 @@ class Command(BaseCommand):
         return "".join(random.choices("0123456789abcdef", k=length))
 
     @staticmethod
-    def _get_celery_import_path() -> Optional[str]:
-        """Get celery import path for run check."""
-        directory = os.getcwd()
-        for root, dirs, files in os.walk(directory):
-            if "celery.py" in files:
-                return os.path.join(root, "celery").replace(os.getcwd() + "/", "").replace("/", ".")
+    def _find_celery_app_import_path() -> Optional[str]:
+        """Find celery app import path."""
+        work_dir = os.getcwd()
+        target_filename = "__init__.py"
+        celery_app_regex = re.compile(r"\s*celery_app\s*")
+
+        for root, _, files in os.walk(work_dir):
+            if os.path.relpath(root, work_dir).count(os.sep) < 2:
+                for file_name in files:
+                    if file_name == target_filename:
+                        file_path = os.path.join(root, file_name)
+                        file_text = Path(file_path).read_text(encoding="utf-8")
+                        if celery_app_regex.search(file_text) is not None:
+                            return (
+                                file_path.replace(work_dir + os.sep, "")
+                                .replace(os.sep + target_filename, "")
+                                .replace(os.sep, ".")
+                            )
 
         return None

@@ -7,8 +7,9 @@ from django.core.cache import cache as django_cache
 from test_django_project.settings import INSTALLED_APPS
 
 
-# initialize django settings
 def pytest_configure():
+    """Configure django settings for tests."""
+
     django_settings.configure(
         INSTALLED_APPS=INSTALLED_APPS,
         DATABASES={
@@ -23,7 +24,7 @@ def pytest_configure():
                 "LOCATION": "unique-snowflake",
             }
         },
-        CELERY_BROKER_URL="redis://127.0.0.1:48765/1",
+        CELERY_BRORKER_URL="redis://127.0.0.1:6379/1",
         STATIC_URL="/static/",
         MEDIA_URL="/media/",
         MIDDLEWARE_CLASSES=(),
@@ -31,22 +32,22 @@ def pytest_configure():
 
 
 @pytest.fixture
-def root_static_dir(tmpdir, settings):
+def root_static_dir(tmpdir):
     """Fixture for static root directory."""
     static_dir = tmpdir.mkdir("test_staticfiles")
-    settings.STATIC_ROOT = static_dir.strpath
+    django_settings.STATIC_ROOT = static_dir.strpath
     return static_dir
 
 
 @pytest.fixture
-def root_media_dir(tmpdir, settings):
+def root_media_dir(tmpdir):
     """Fixture for media root directory."""
     media_dir = tmpdir.mkdir("test_media")
-    settings.MEDIA_ROOT = media_dir.strpath
+    django_settings.MEDIA_ROOT = media_dir.strpath
     return media_dir
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def dj_cache():
     """Fixture for django cache."""
     django_cache.clear()
