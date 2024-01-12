@@ -1,5 +1,19 @@
 version: '3.8'
 services:
+  redis:
+    image: redis:7.2.3-alpine
+    restart: always
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=1
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 1s
+      retries: 60
+
   web:
     build:
       context: .
@@ -14,6 +28,9 @@ services:
     volumes:
       - /tmp/.djangoheads/.mypy_cache:/home/app/libs/.mypy_cache
       - /tmp/.djangoheads/.ruff_cache:/home/app/libs/.ruff_cache
-      - /tmp/.djangoheads/.tox:/home/app/libs/.tox
+      - /tmp/.djangoheads/.nox:/home/app/libs/.nox
       - /tmp/.pypoetry:/root/.cache/pypoetry
       - /tmp/.docker:/tmp/.docker
+    depends_on:
+      redis:
+        condition: service_healthy

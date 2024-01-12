@@ -9,6 +9,7 @@ homepage = "https://github.com/djangoheads/djangoheads"
 repository = "https://github.com/djangoheads/djangoheads"
 documentation = "https://github.com/djangoheads/djangoheads"
 keywords = ["django", "development", "framework"]
+include = [{ path = "djangoheads", format = "sdist" }]
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -36,48 +37,17 @@ python = "^3.8"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"
-django = "^4.2.7"
+django = "^4.2.3"
 nox = "^2023.4.22"
+pytest-django = "^4.7.0"
+django-redis = "^5.4.0"
+celery = "^5.3.6"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.mypy]
-python_version = "3.8"
-ignore_missing_imports = true
-strict = true
-plugins = ["mypy_django_plugin.main"]
-
-[tool.django-stubs]
-django_settings_module = "tests.__django_settings__"
-
 [tool.ruff]
-select = ["ALL"]
-ignore = [
-    "COM812",
-    "D104",
-    "FA100",
-    "ANN101",
-    "ANN102",
-    "ERA001",
-    "RUF001",
-    "RUF002",
-    "RUF003",
-    "D212",
-    "D400",
-    "D415",
-    "D203",
-    "D102",
-    "D210",
-    "DTZ003",
-    "D100",
-    "D107",
-    "FBT",
-    "TRY400",
-    "TRY003",
-    "PT009",
-]
 exclude = [
     ".git",
     "__pycache__",
@@ -88,8 +58,32 @@ exclude = [
     "setup.py",
 ]
 line-length = 120
+indent-width = 4
 force-exclude = true
-dummy-variable-rgx = "(?x)(^venv/ | ^venv\\.py$)"
 show-fixes = true
 show-source = true
 target-version = "py38"
+
+[tool.ruff.lint]
+select = ["I", "ANN", "D", "F", "E", "W", "N", "C90", "PL", "T20", "SLF", "SIM", "TID", "TCH", "PERF", "FURB"]
+ignore = ["D100", "D104", "D107", "F403", "N805", "ANN101", "ANN102", "ANN401", "PLR"]
+fixable = ["ALL"]
+unfixable = []
+dummy-variable-rgx = "(?x)(^venv/ | ^venv\\.py$)"
+
+[tool.ruff.format]
+line-ending = "auto"
+indent-style = "space"
+quote-style = "double"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+docstring-code-line-length = 40
+
+[tool.mypy]
+python_version = "3.8"
+ignore_missing_imports = true
+strict = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "test_django_project.settings"
