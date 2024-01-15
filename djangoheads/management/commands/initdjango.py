@@ -13,11 +13,9 @@ class Command(BaseCommand):
     def handle(self, *args: Tuple[Any, ...], **options: Dict[str, Any]) -> None:  # noqa: ARG002
         """Init Django implementation."""
         call_command("createcachetable")
+        call_command("migrate", no_input=True, interactive=False)
 
-        call_command("migrate", no_input=True)
+        if not User.objects.filter(is_superuser=True).exists():
+            User.objects.create_superuser("admin", password="admin")  # pragma: allowlist secret # noqa: S106
 
-        if User.objects.all().count() == 0:
-            User.objects.create_user("admin", password="admin")  # pragma: allowlist secret # noqa: S106
-
-        collectstatic_interacive = os.environ.get("RUNNING_TESTS", None) != "true"
-        call_command("collectstatic", interactive=collectstatic_interacive)
+        call_command("collectstatic", no_input=True, interactive=False)
