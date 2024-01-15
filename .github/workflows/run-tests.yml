@@ -2,9 +2,6 @@ name: run-tests
 
 on:
   push:
-    branches-ignore:
-      - main
-      - stage
 
 jobs:
   job-execute-tests:
