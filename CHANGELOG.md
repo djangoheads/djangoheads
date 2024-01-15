@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2](https://github.com/djangoheads/djangoheads/compare/v1.1.1...v1.1.2) (2024-01-15)
+
+
+### Bug Fixes
+
+* removed env test marker ([a51f637](https://github.com/djangoheads/djangoheads/commit/a51f637972733aaa4a2f63e476c41b63eaa659b4))
+
 ## [1.1.1](https://github.com/djangoheads/djangoheads/compare/v1.1.0...v1.1.1) (2024-01-15)
 
 
