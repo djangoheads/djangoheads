@@ -1,4 +1,3 @@
-import os
 from typing import Any, Dict, Tuple
 
 from django.contrib.auth.models import User
@@ -16,6 +15,10 @@ class Command(BaseCommand):
         call_command("migrate", no_input=True, interactive=False)
 
         if not User.objects.filter(is_superuser=True).exists():
-            User.objects.create_superuser("admin", password="admin")  # pragma: allowlist secret # noqa: S106
+            User.objects.create_superuser(
+                "admin",
+                email=None,
+                password="admin",  # pragma: allowlist secret # noqa: S106
+            )
 
         call_command("collectstatic", no_input=True, interactive=False)

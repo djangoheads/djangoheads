@@ -24,8 +24,6 @@ def test_file(extra_static_dir):
 @pytest.mark.django_db
 def test_init_django_command(dj_cache, test_file, root_static_dir) -> None:
     """Test the initdjango command."""
-    os.environ["RUNNING_TESTS"] = "true"
-
     call_command("initdjango")
 
     assert User.objects.filter(username="admin").exists()
