@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1](https://github.com/djangoheads/djangoheads/compare/v1.1.0...v1.1.1) (2024-01-15)
+
+
+### Bug Fixes
+
+* **init:** initdjango ([67baa6c](https://github.com/djangoheads/djangoheads/commit/67baa6c81d93310da629bdeeba774cfc459f47cb))
+
 ## [1.1.0](https://github.com/djangoheads/djangoheads/compare/v1.0.0...v1.1.0) (2024-01-12)
 
 
