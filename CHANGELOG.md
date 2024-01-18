@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/djangoheads/djangoheads/compare/v1.1.2...v1.2.0) (2024-01-18)
+
+
+### Features
+
+* **debug:** Add Sentry SDK Support ([96b3823](https://github.com/djangoheads/djangoheads/commit/96b38230b4e468dcd4cf4fd5a15482695de6bac6))
+
 ## [1.1.2](https://github.com/djangoheads/djangoheads/compare/v1.1.1...v1.1.2) (2024-01-15)
 
 
