@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1](https://github.com/djangoheads/djangoheads/compare/v1.2.0...v1.2.1) (2024-01-29)
+
+
+### Bug Fixes
+
+* settings import ([#6](https://github.com/djangoheads/djangoheads/issues/6)) ([f308ca2](https://github.com/djangoheads/djangoheads/commit/f308ca2d9e833c77889cff2c8364ed1bc03b41a0))
+* settings import, pre-commit ([8c8e8c8](https://github.com/djangoheads/djangoheads/commit/8c8e8c82fbadaef397da606f07d66ce3610fe8e8))
+
 ## [1.2.0](https://github.com/djangoheads/djangoheads/compare/v1.1.2...v1.2.0) (2024-01-18)
 
 
