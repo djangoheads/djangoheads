@@ -66,7 +66,7 @@ target-version = "py38"
 
 [tool.ruff.lint]
 select = ["I", "ANN", "D", "F", "E", "W", "N", "C90", "PL", "T20", "SLF", "SIM", "TID", "TCH", "PERF", "FURB"]
-ignore = ["D100", "D104", "D107", "F403", "N805", "ANN101", "ANN102", "ANN401", "PLR"]
+ignore = ["D100", "D104", "D107", "D401", "F403", "N805", "ANN101", "ANN102", "ANN401", "PLR"]
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "(?x)(^venv/ | ^venv\\.py$)"
